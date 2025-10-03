@@ -1,0 +1,39 @@
+{
+  "name": "app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview",
+    "collab:server": "node scripts/collab-server.mjs",
+    "verify:deployment": "node verify-deployment.mjs"
+  },
+  "dependencies": {
+    "clsx": "^2.1.1",
+    "html-to-image": "^1.11.13",
+    "nanoid": "^5.1.5",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "reactflow": "^11.11.4",
+    "ws": "^8.18.3",
+    "y-websocket": "^1.5.1",
+    "yjs": "^13.6.27",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.33.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "@vitejs/plugin-react": "^5.0.0",
+    "eslint": "^9.33.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.20",
+    "globals": "^16.3.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.39.1",
+    "vite": "^7.1.2"
+  }
+}

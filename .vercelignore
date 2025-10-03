@@ -1,0 +1,21 @@
+# File di log
+*.log
+collab-server.log
+dev-server.log
+ngrok*.log
+
+# Script server (non necessari per il frontend)
+scripts/
+
+# File di configurazione locale
+ngrok.yml
+
+# File temporanei
+.DS_Store
+*.swp
+*.swo
+
+# Node modules (Vercel li reinstalla)
+node_modules/
+
+

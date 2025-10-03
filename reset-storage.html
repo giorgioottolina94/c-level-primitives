@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset Storage - C-Level Primitives</title>
+</head>
+<body>
+    <h1>Reset Storage</h1>
+    <p>Questa pagina pulirà tutti i dati salvati delle boards.</p>
+    <button onclick="resetStorage()">🧹 Reset Completo</button>
+    <div id="status"></div>
+    
+    <script>
+    function resetStorage() {
+        // Pulisci localStorage
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && (key.includes('workshop') || key.includes('board') || key.includes('yjs'))) {
+                keysToRemove.push(key);
+            }
+        }
+        
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Pulisci sessionStorage
+        sessionStorage.clear();
+        
+        // Pulisci IndexedDB se presente
+        if ('indexedDB' in window) {
+            indexedDB.deleteDatabase('yjs');
+        }
+        
+        document.getElementById('status').innerHTML = `
+            <h2 style="color: green;">✅ Reset Completato!</h2>
+            <p>Rimossi ${keysToRemove.length} elementi dal localStorage</p>
+            <p>SessionStorage pulito</p>
+            <p>Database Y.js pulito</p>
+            <p><strong>Ora puoi tornare all'app e fare test puliti!</strong></p>
+            <a href="http://localhost:5173" style="background: #007bff; color: white; padding: 10px; text-decoration: none; border-radius: 5px;">🏠 Torna all'App (localhost)</a>
+            <a href="https://c-level-primitives.eu.ngrok.io" style="background: #28a745; color: white; padding: 10px; text-decoration: none; border-radius: 5px; margin-left: 10px;">🌐 Torna all'App (ngrok)</a>
+        `;
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+version: "2"
+authtoken: # Il tuo token è già configurato globalmente
+tunnels:
+  web:
+    addr: 5173
+    proto: http
+    subdomain: c-level-primitives
+  websocket:
+    addr: 1234
+    proto: http
+    subdomain: c-level-primitives-ws
