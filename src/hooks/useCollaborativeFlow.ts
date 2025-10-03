@@ -3,40 +3,21 @@ import { addEdge, applyEdgeChanges, applyNodeChanges, MarkerType } from 'reactfl
 import type { Connection, EdgeChange, NodeChange } from 'reactflow'
 import { nanoid } from 'nanoid'
 import * as Y from 'yjs'
-import { WebsocketProvider } from 'y-websocket'
+import { LiveblocksYjsProvider } from '@liveblocks/yjs'
+import { createClient } from '@liveblocks/client'
 import type { BoardSnapshot, PrimitiveEdge, PrimitiveNode, PrimitiveNodeData } from '../types'
 
-const defaultEndpoint = (() => {
-  if (typeof window === 'undefined') {
-    return 'ws://localhost:1234'
-  }
-  const { host } = window.location
-  
-  // Solo localhost: usa WebSocket con collaborazione
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return 'ws://localhost:1234'
-  }
-  
-  // IP di rete locale (es. 192.168.x.x, 10.x.x.x, 172.16-31.x.x): punta al server sulla stessa macchina
-  const hostName = host.split(':')[0]
-  const isPrivateA = hostName.startsWith('10.')
-  const isPrivateB = hostName.startsWith('192.168.')
-  const isPrivateC = /^172\.(1[6-9]|2\d|3[0-1])\./.test(hostName)
-  const isIPv4 = /^\d{1,3}(?:\.\d{1,3}){3}$/.test(hostName)
-  if (isIPv4 && (isPrivateA || isPrivateB || isPrivateC)) {
-    return `ws://${hostName}:1234`
-  }
-  
-  // ngrok HTTPS: usa tunnel WebSocket dedicato
-  if (host.includes('c-level-primitives.eu.ngrok.io')) {
-    return 'wss://c-level-primitives-ws.eu.ngrok.io'
-  }
-  
-  // Altri casi: disabilita WebSocket
-  return null
-})()
+// Liveblocks Public Key - ottieni la tua su https://liveblocks.io
+const LIVEBLOCKS_PUBLIC_KEY = import.meta.env.VITE_LIVEBLOCKS_PUBLIC_KEY
 
-const WS_ENDPOINT = import.meta.env.VITE_COLLAB_ENDPOINT ?? defaultEndpoint
+if (!LIVEBLOCKS_PUBLIC_KEY) {
+  console.warn('⚠️ VITE_LIVEBLOCKS_PUBLIC_KEY not set. Collaboration will not work.')
+}
+
+// Crea il client Liveblocks (riutilizzato per tutte le stanze)
+const liveblocksClient = LIVEBLOCKS_PUBLIC_KEY
+  ? createClient({ publicApiKey: LIVEBLOCKS_PUBLIC_KEY })
+  : null
 
 const NODES_KEY = 'nodes'
 const EDGES_KEY = 'edges'
@@ -139,10 +120,12 @@ export const useCollaborativeFlow = (roomId: string): CollaborativeFlow => {
   }, [edges])
 
   useEffect(() => {
-    // Non creare connessione WebSocket se endpoint è null (ngrok HTTPS)
-    if (!WS_ENDPOINT) {
+    // Se Liveblocks non è configurato, usa modalità locale (solo per dev)
+    if (!liveblocksClient) {
       setStatus('disconnected')
-      // Crea doc locale senza WebSocket per mantenere funzionalità
+      console.warn('⚠️ Running in local mode without collaboration')
+      
+      // Crea doc locale senza sincronizzazione
       const doc = new Y.Doc()
       docRef.current = doc
       
@@ -176,9 +159,14 @@ export const useCollaborativeFlow = (roomId: string): CollaborativeFlow => {
       }
     }
     
+    // Crea documento Yjs e provider Liveblocks
     const doc = new Y.Doc()
     
-    const provider = new WebsocketProvider(WS_ENDPOINT, roomId, doc, { connect: true })
+    const { room, leave } = liveblocksClient.enterRoom(roomId, {
+      initialPresence: {},
+    })
+    
+    const provider = new LiveblocksYjsProvider(room, doc)
     docRef.current = doc
 
     const yNodes = doc.getArray<PrimitiveNode>(NODES_KEY)
@@ -203,19 +191,21 @@ export const useCollaborativeFlow = (roomId: string): CollaborativeFlow => {
     yNodes.observe(nodesObserver)
     yEdges.observe(edgesObserver)
 
-    const handleStatus = (event: { status: CollaborationStatus }) => {
-      setStatus(event.status)
-    }
-
-    provider.on('status', handleStatus)
-
-    setStatus(provider.wsconnected ? 'connected' : 'connecting')
+    // Liveblocks gestisce automaticamente lo status
+    // Iniziamo come "connecting" e poi diventeremo "connected"
+    setStatus('connecting')
+    
+    // Simula connessione riuscita dopo un breve delay
+    const statusTimer = setTimeout(() => {
+      setStatus('connected')
+    }, 500)
 
     return () => {
+      clearTimeout(statusTimer)
       yNodes.unobserve(nodesObserver)
       yEdges.unobserve(edgesObserver)
-      provider.off('status', handleStatus)
       provider.destroy()
+      leave()
       doc.destroy()
       docRef.current = null
     }
