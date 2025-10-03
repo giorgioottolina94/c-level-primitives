@@ -3,7 +3,7 @@ import type { BoardSnapshot } from '../types'
 
 const SNAPSHOT_KEY = 'workshop.board-snapshots'
 
-const readStore = () => {
+const readStore = (): Record<string, BoardSnapshot> => {
   if (typeof window === 'undefined') {
     return {}
   }

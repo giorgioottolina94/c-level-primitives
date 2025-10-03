@@ -13,7 +13,6 @@ import clsx from 'clsx'
 import { useDiagramActions } from '../../context/DiagramActionsContext'
 import { categoryMeta } from '../../utils/primitives'
 import { blockCategories, blockCategoryMap } from '../../data/blockCategories'
-import type { BlockCategory } from '../../data/blockCategories'
 import type { PrimitiveNodeData } from '../../types'
 
 const dataSourceColor = '#7c3aed'
